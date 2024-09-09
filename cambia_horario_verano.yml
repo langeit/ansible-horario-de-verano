@@ -1,0 +1,45 @@
+# @author [Mauricio Lange]
+# @email [mlangea@gestion.uta.cl]
+# @create date 2023-09-07 12:20
+# @desc [Automation - Configura Servidor NTP y Zona Horaria a Horario Verano/Invierno en Chile]
+# UTC -3 = Verano
+# UTC -4 = Invierno
+# IP_SERVIDOR_NTP <- La ip de su servidor NTP
+
+#Start of codes
+---
+- name: Configura Servidor NTP y Zona Horaria de Chile en Verano
+  hosts: cisco
+  connection: network_cli
+  gather_facts: false
+
+  tasks:
+
+   #Setea zona horaria de Chile en verano
+   - name: Zona horaria de Chile en verano
+     ios_config:
+        lines:
+            #Configuration commands
+          - ntp server IP_SERVIDOR_NTP
+          - clock timezone UTC -3
+
+   #Guarda la configuración
+   - name: Guarda la configuración en running-config
+     ios_config:
+       save_when: modified
+
+   #Obtiene la información del relojs
+   - name: "Obtiene la configuración del reloj"
+     register: get_clock_config
+     ios_command:
+       commands:
+          - "write"
+          - "show running-config | include clock timezone"
+          - "show running-config | include ntp server"
+
+  #Output final results on the device run and start-config.
+   - name: Muestra la configuración del dispositivo
+     debug:
+      var: get_clock_config.stdout
+
+#End of codes
